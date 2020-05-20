@@ -32,6 +32,7 @@ import (
 // The message type must have been registered with the protobuf library, and implement
 // the expected interfaces for a generated .pb.go message struct.
 func newMessageType(registry ProtoRegistry, nestedMsgName, name string) (starlark.Value, error) {
+	fmt.Printf("[newMessageType] nestedMsgName=%s name=%s\n", nestedMsgName, name)
 	goType, err := registry.UnstableProtoMessageType(name)
 	if err != nil {
 		return nil, err
@@ -40,13 +41,17 @@ func newMessageType(registry ProtoRegistry, nestedMsgName, name string) (starlar
 		return nil, fmt.Errorf("Protobuf message type %q not found", name)
 	}
 
+	fmt.Printf("[newMessageType] goType=%#v\n", goType)
 	var emptyMsg descriptor.Message
 	if goType.Kind() == reflect.Ptr {
 		goValue := reflect.New(goType.Elem()).Interface()
+		fmt.Printf("[newMessageType] goValue=%#v\n", goValue)
 		if iface, ok := goValue.(descriptor.Message); ok {
+			fmt.Printf("[newMessageType] iface=%#v ok=true\n", iface)
 			emptyMsg = iface
 		}
 	}
+	fmt.Printf("[newMessageType] emptyMsg=%#v\n", emptyMsg)
 	if emptyMsg == nil {
 		// Return a slightly useful error in case some clever person has
 		// manually registered a `proto.Message` that doesn't use pointer
@@ -152,6 +157,7 @@ func (mt *skyProtoMessageType) CallInternal(thread *starlark.Thread, args starla
 		return nil, err
 	}
 
+	fmt.Printf("[CallInternal] args=%#v kwargs=%#v\n", args, kwargs)
 	wrapper := NewSkyProtoMessage(proto.Clone(mt.emptyMsg))
 
 	// Parse the kwarg set into a map[string]starlark.Value, containing one
